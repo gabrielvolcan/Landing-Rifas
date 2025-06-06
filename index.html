@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rifas Digitales Exclusivas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fuente Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Glow cards */
+    .glow-card {
+      background-color: #121212;
+      color: #e0e0e0;
+      box-shadow:
+        0 0 8px rgba(0, 150, 255, 0.6),
+        0 0 20px rgba(0, 150, 255, 0.4),
+        0 0 40px rgba(0, 150, 255, 0.3);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(0, 150, 255, 0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .glow-card:hover {
+      transform: translateY(-5px);
+      box-shadow:
+        0 0 15px rgba(0, 200, 255, 0.8),
+        0 0 30px rgba(0, 200, 255, 0.6),
+        0 0 60px rgba(0, 200, 255, 0.4);
+      border-color: rgba(0, 200, 255, 0.8);
+    }
+    .glow-card h2,
+    .glow-card p,
+    .glow-card .price-tag {
+      color: #cbd5e1;
+    }
+
+    /* Modal backdrop */
+    #modal {
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 1rem;
+    }
+    #modal.flex {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Modal box con tamaño ajustado y scroll */
+    #modal > div.bg-white {
+      background: #121212;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 100%;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow:
+        0 0 10px rgba(0, 150, 255, 0.6),
+        0 0 20px rgba(0, 150, 255, 0.4),
+        0 0 40px rgba(0, 150, 255, 0.3);
+      color: #e0e0e0;
+      position: relative;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: transform 0.3s ease;
+      transform: translateY(-20px);
+    }
+    #modal.flex > div.bg-white {
+      transform: translateY(0);
+    }
+
+    /* Botón cerrar */
+    #closeModal {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: transparent;
+      border: none;
+      color: #a0a0a0;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      z-index: 10;
+    }
+    #closeModal:hover {
+      color: #00aaff;
+      filter: drop-shadow(0 0 6px #00aaff);
+    }
+
+    /* Inputs y select modal */
+    #modal input,
+    #modal select {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      margin-top: 0.25rem;
+      margin-bottom: 1rem;
+      border: 1.5px solid #333;
+      border-radius: 8px;
+      background: #1e1e1e;
+      color: #eee;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #modal input:focus,
+    #modal select:focus {
+      border-color: #00aaff;
+      box-shadow: 0 0 8px #00aaff;
+      outline: none;
+    }
+
+    /* Botón enviar y Participar con glow */
+    .btn-glow {
+      background: linear-gradient(90deg, #00aaff, #0066cc);
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 8px #00aaff;
+      width: 100%;
+      text-align: center;
+      display: inline-block;
+    }
+    .btn-glow:hover {
+      background: linear-gradient(90deg, #0066cc, #00aaff);
+      box-shadow: 0 0 15px #00cfff;
+    }
+
+    /* Selector país principal con glow */
+    #countrySelect {
+      background-color: #121212;
+      color: #e0e0e0;
+      border: 1.5px solid rgba(0, 150, 255, 0.6);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow:
+        0 0 6px rgba(0, 150, 255, 0.5),
+        0 0 12px rgba(0, 150, 255, 0.4);
+    }
+    #countrySelect:focus {
+      outline: none;
+      border-color: #00aaff;
+      box-shadow:
+        0 0 12px rgba(0, 170, 255, 0.8),
+        0 0 24px rgba(0, 170, 255, 0.6);
+      color: #ffffff;
+    }
+
+    /* Header con flex para centrar menú */
+    .header-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    .logo-container {
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    nav.menu {
+      font-family: 'Poppins', sans-serif;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 2rem;
+    }
+    nav.menu a {
+      color: white;
+      font-weight: 600;
+      font-size: 1.125rem; /* text-lg */
+      transition: color 0.3s;
+      text-decoration: none;
+    }
+    nav.menu a:hover {
+      color: #cbd5e1;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      nav.menu {
+        position: static;
+        transform: none;
+        justify-content: center;
+        margin-top: 1rem;
+        gap: 1.5rem;
+        font-size: 1rem;
+      }
+      .header-container {
+        flex-direction: column;
+        align-items: center;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+      }
+      .logo-container {
+        margin-bottom: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-black bg-cover bg-center bg-fixed" style="background-image: url('https://i.postimg.cc/wjmmFj2x/alienware-blue-3840x2160-14355.jpg');">
+
+  <!-- Header -->
+  <header class="bg-transparent text-white py-6 shadow-md relative">
+    <div class="container mx-auto header-container">
+      <div class="logo-container">
+        <img src="https://i.postimg.cc/VvzWx9Tb/Recurso-1.png" alt="Logo" class="h-12" />
+      </div>
+      <nav class="menu" role="navigation" aria-label="Menú principal">
+        <a href="#inicio">INICIO</a>
+        <a href="#rifas">RIFAS</a>
+        <a href="#nosotros">NOSOTROS</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Selector país -->
+  <div class="container mx-auto px-4 py-6 max-w-5xl">
+    <label for="countrySelect" class="block mb-2 font-semibold text-white">Selecciona tu país para ver precios:</label>
+    <select id="countrySelect" class="w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <option value="" disabled selected>-- Selecciona un país --</option>
+      <option value="peru">Perú</option>
+      <option value="venezuela">Venezuela</option>
+      <option value="argentina">Argentina</option>
+      <option value="chile">Chile</option>
+      <option value="uruguay">Uruguay</option>
+    </select>
+  </div>
+
+  <!-- Rifas -->
+  <main class="flex-grow container mx-auto px-4 py-10 max-w-5xl grid gap-8 grid-cols-1 md:grid-cols-3">
+
+    <!-- Rifa Logotipos -->
+    <section class="p-6 flex flex-col glow-card" data-raffle-id="logotipos" aria-labelledby="title-logotipos">
+      <h2 id="title-logotipos" class="text-2xl font-semibold mb-4 text-center">RIFA DE LOGOTIPOS</h2>
+      <img 
+        src="https://i.postimg.cc/zvcXs45S/exitooooo.jpg" 
+        alt="Ejemplo de logotipo profesional"
+        class="mx-auto mb-4 max-h-32 object-contain"
+        loading="lazy"
+      />
+      <p class="flex-grow mb-6">
+        Gana un logotipo profesional, único y hecho a la medida de tu marca. Ideal para emprendedores que quieren destacar.
+      </p>
+      <p class="font-semibold mb-2 text-center text-lg price-tag">$XX</p>
+      <div class="mt-4">
+        <div class="w-full bg-gray-300 rounded h-4" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Porcentaje de tickets disponibles">
+          <div class="bg-green-500 h-4 rounded transition-all duration-500" style="width: 100%"></div>
+        </div>
+      </div>
+      <p class="text-center mt-1 text-sm text-gray-600" id="progress-text-logotipos">100% tickets disponibles</p>
+      <button class="open-modal-btn btn-glow mt-4" type="button" aria-haspopup="dialog" aria-controls="modal">
+        Participar
+      </button>
+    </section>
+
+    <!-- Rifa Páginas Web -->
+    <section class="p-6 flex flex-col glow-card" data-raffle-id="paginas-web" aria-labelledby="title-paginas-web">
+      <h2 id="title-paginas-web" class="text-2xl font-semibold mb-4 text-center">RIFA DE PAGINAS WEB</h2>
+      <img 
+        src="https://i.postimg.cc/sX7wMGwt/pagina-web.jpg" 
+        alt="Ejemplo de página web moderna" 
+        class="mx-auto mb-4 max-h-32 object-contain"
+        loading="lazy"
+      />
+      <p class="flex-grow mb-6">
+        Participa para ganar una página web moderna, responsive y personalizada para tu negocio o proyecto.
+      </p>
+      <p class="font-semibold mb-2 text-center text-lg price-tag">$XX</p>
+      <div class="mt-4">
+        <div class="w-full bg-gray-300 rounded h-4" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Porcentaje de tickets disponibles">
+          <div class="bg-green-500 h-4 rounded transition-all duration-500" style="width: 100%"></div>
+        </div>
+      </div>
+      <p class="text-center mt-1 text-sm text-gray-600" id="progress-text-paginas-web">100% tickets disponibles</p>
+      <button class="open-modal-btn btn-glow mt-4" type="button" aria-haspopup="dialog" aria-controls="modal">
+        Participar
+      </button>
+    </section>
+
+    <!-- Rifa Aplicación -->
+    <section class="p-6 flex flex-col glow-card" data-raffle-id="premios-digitales" aria-labelledby="title-premios-digitales">
+      <h2 id="title-premios-digitales" class="text-2xl font-semibold mb-4 text-center">RIFA DE APLICACION PARA TU NEGOCIO</h2>
+      <img 
+        src="https://i.postimg.cc/yNRLZySw/iconos-de-comunicacion-y-redes-sociales-en-dispositivos-de-telefonos-inteligentes.jpg"  
+        alt="Aplicación móvil para negocios" 
+        class="mx-auto mb-4 max-h-32 object-contain"
+        loading="lazy"
+      />
+      <p class="flex-grow mb-6">
+        🚀 ¡Gana la app que revolucionará tu vida! 🚀
+      </p>
+      <p class="font-semibold mb-2 text-center text-lg price-tag">$XX</p>
+      <div class="mt-4">
+        <div class="w-full bg-gray-300 rounded h-4" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Porcentaje de tickets disponibles">
+          <div class="bg-green-500 h-4 rounded transition-all duration-500" style="width: 100%"></div>
+        </div>
+      </div>
+      <p class="text-center mt-1 text-sm text-gray-600" id="progress-text-premios-digitales">100% tickets disponibles</p>
+      <button class="open-modal-btn btn-glow mt-4" type="button" aria-haspopup="dialog" aria-controls="modal">
+        Participar
+      </button>
+    </section>
+
+  </main>
+
+  <footer class="bg-transparent text-center py-4 text-gray-500 text-sm">
+    &copy; 2025 Gabriel Diseña. Todos los derechos reservados.
+  </footer>
+
+  <!-- Modal Participación -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative overflow-y-auto max-h-[70vh]">
+      <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700" aria-label="Cerrar">✕</button>
+      <h3 id="modalTitle" class="text-xl font-semibold mb-4 text-center">Participar en la rifa</h3>
+
+      <form id="participationForm" class="space-y-4" enctype="multipart/form-data">
+        <div>
+          <label for="fullName" class="block mb-1 font-medium">Nombre y Apellido</label>
+          <input type="text" id="fullName" name="fullName" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+
+        <div>
+          <label for="phone" class="block mb-1 font-medium">Número de teléfono (con código país)</label>
+          <input type="tel" id="phone" name="phone" placeholder="+54 9 11 1234 5678" pattern="^\+\d{1,3} ?\d{4,14}$" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <p class="text-xs text-gray-500 mt-1">Ejemplo: +54 9 11 1234 5678</p>
+        </div>
+
+        <div>
+          <label for="email" class="block mb-1 font-medium">Correo electrónico</label>
+          <input type="email" id="email" name="email" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+
+        <div>
+          <label for="country" class="block mb-1 font-medium">País</label>
+          <select id="country" name="country" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled>-- Selecciona un país --</option>
+            <option value="peru">Perú</option>
+            <option value="venezuela">Venezuela</option>
+            <option value="argentina">Argentina</option>
+            <option value="chile">Chile</option>
+            <option value="uruguay">Uruguay</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="raffle" class="block mb-1 font-medium">Selecciona la rifa</label>
+          <select id="raffle" name="raffle" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="" disabled selected>-- Selecciona una rifa --</option>
+            <option value="logotipos">Rifa de Logotipos</option>
+            <option value="paginas-web">Rifa de Páginas Web</option>
+            <option value="premios-digitales">Rifa de Aplicación para tu negocio</option>
+          </select>
+        </div>
+
+        <div id="paymentMethods" class="mt-2 p-4 bg-gray-100 rounded hidden"></div>
+
+        <div>
+          <label for="boletos" class="block mb-1 font-medium">Cantidad de boletos</label>
+          <input type="number" id="boletos" name="boletos" min="1" value="1" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+
+        <div>
+          <label for="paymentProof" class="block mb-1 font-medium">Adjuntar comprobante de pago</label>
+          <input type="file" id="paymentProof" name="paymentProof" accept="image/*,application/pdf" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+
+        <button type="submit" id="statusButton" class="btn-glow">Enviar Participación</button>
+        <p id="statusMessage" class="mt-2">Esperando confirmación...</p>
+      </form>
+    </div>
+  </div>
+
+<script>
+  // Precios por país y rifa
+  const pricesByCountry = {
+    peru: {
+      "logotipos": 30,
+      "paginas-web": 50,
+      "premios-digitales": 20,
+    },
+    venezuela: {
+      "logotipos": 100,
+      "paginas-web": 150,
+      "premios-digitales": 50,
+    },
+    argentina: {
+      "logotipos": 10000,
+      "paginas-web": 15000,
+      "premios-digitales": 25000,
+    },
+    chile: {
+      "logotipos": 10000,
+      "paginas-web": 15000,
+      "premios-digitales": 25000,
+    },
+    uruguay: {
+      "logotipos": 28,
+      "paginas-web": 48,
+      "premios-digitales": 18,
+    }
+  };
+
+  const currencyByCountry = {
+    peru: 'S/.',
+    venezuela: 'Bs.',
+    argentina: '$',
+    chile: '$',
+    uruguay: '$',
+  };
+
+  function updatePrices(country) {
+    if (!pricesByCountry[country]) return;
+
+    const currency = currencyByCountry[country] || '$'; // símbolo por defecto
+
+    document.querySelectorAll('section[data-raffle-id]').forEach(section => {
+      const raffleId = section.getAttribute('data-raffle-id');
+      const price = pricesByCountry[country][raffleId];
+      const priceTag = section.querySelector('.price-tag');
+      if (priceTag && price !== undefined) {
+        priceTag.textContent = `${currency}${price}`;
+      }
+    });
+  }
+
+  // Sincronizar selector modal con selector principal
+  function syncModalCountry(country) {
+    const modalCountrySelect = document.getElementById('country');
+    if (modalCountrySelect && modalCountrySelect.value !== country) {
+      modalCountrySelect.value = country;
+    }
+  }
+
+  // Sincronizar selector principal con selector modal
+  function syncMainCountry(country) {
+    const mainCountrySelect = document.getElementById('countrySelect');
+    if (mainCountrySelect && mainCountrySelect.value !== country) {
+      mainCountrySelect.value = country;
+    }
+  }
+
+  // Elementos
+  const countrySelect = document.getElementById('countrySelect');
+  const modalCountrySelect = document.getElementById('country');
+  const openModalBtns = document.querySelectorAll('.open-modal-btn');
+  const modal = document.getElementById('modal');
+  const closeModalBtn = document.getElementById('closeModal');
+
+  // Evento cambio país selector visible
+  countrySelect.addEventListener('change', (e) => {
+    const selectedCountry = e.target.value;
+    updatePrices(selectedCountry);
+    syncModalCountry(selectedCountry);
+  });
+
+  // Evento cambio país selector modal
+  if (modalCountrySelect) {
+    modalCountrySelect.addEventListener('change', (e) => {
+      const selectedCountry = e.target.value;
+      updatePrices(selectedCountry);
+      syncMainCountry(selectedCountry);
+    });
+  }
+
+  // Abrir modal y preseleccionar rifa según el botón
+  openModalBtns.forEach(button => {
+    button.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Preseleccionar rifa en modal
+      const raffleId = button.closest('section').getAttribute('data-raffle-id');
+      const raffleSelect = document.getElementById('raffle');
+      if (raffleSelect) {
+        raffleSelect.value = raffleId;
+      }
+
+      let country = countrySelect.value || 'peru';
+      updatePrices(country);
+      syncModalCountry(country);
+    });
+  });
+
+  // Cerrar modal
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    });
+  }
+
+  // Inicializar país por defecto al cargar la página y actualizar precios
+  window.addEventListener('DOMContentLoaded', () => {
+    let defaultCountry = countrySelect.value;
+    if (!defaultCountry) {
+      defaultCountry = 'peru';
+      countrySelect.value = defaultCountry;
+    }
+    updatePrices(defaultCountry);
+    syncModalCountry(defaultCountry);
+  });
+
+  // Envío del formulario con fetch (POST)
+  const form = document.getElementById('participationForm');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // Mostrar que estamos confirmando la transferencia
+    const statusButton = document.getElementById('statusButton');
+    const statusMessage = document.getElementById('statusMessage');
+
+    statusButton.textContent = 'Pendiente...'; // Cambiar texto a Pendiente
+    statusButton.classList.add('bg-red-500'); // Botón rojo
+    statusButton.classList.remove('bg-green-500'); // Remover el verde
+
+    statusMessage.textContent = 'Tu participación ha sido recibida. Será confirmada después de la verificación manual.';
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('http://localhost:3000/participation', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        // Mostrar que la participación ha sido enviada correctamente
+        statusButton.textContent = 'Pendiente';
+        statusButton.classList.add('bg-red-500');
+        statusMessage.textContent = 'Tu participación fue recibida correctamente. Esperando confirmación de pago.';
+
+        // Alerta confirmando que la participación fue enviada
+        alert('Participación enviada correctamente. ID: ' + result.id);
+
+        // Resetear el formulario
+        form.reset();
+      } else {
+        alert('Error: ' + result.error);
+      }
+    } catch (error) {
+      alert('Error de conexión al servidor.');
+      console.error(error);
+    }
+  });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
