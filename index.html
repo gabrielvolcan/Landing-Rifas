@@ -534,7 +534,7 @@
     const formData = new FormData(form);
 
     try {
-      const response = await fetch('http://localhost:3000/participation', {
+      const response = await fetch('https://backend-rifas.vercel.app/participation', {
         method: 'POST',
         body: formData,
       });
